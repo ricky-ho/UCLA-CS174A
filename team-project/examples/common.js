@@ -324,7 +324,7 @@ class Torus extends Shape                                         // Build a don
         const circle_points = Array( rows ).fill( vec3( 1/3,0,0 ) )
                                            .map( (p,i,a) => Mat4.translation( -2/3,0,0 )
                                                     .times( Mat4.rotation( i/(a.length-1) * 2*Math.PI,   0,-1,0 ) )
-                                                    .times( Mat4.scale( 1,1,3 ) )
+                                                    .times( Mat4.scale( 0.1,0.1,3 ) )
                                                     .times( p.to4(1) ).to3() );
 
         Surface_Of_Revolution.insert_transformed_copy_into( this, [ rows, columns, circle_points, texture_range ] );         

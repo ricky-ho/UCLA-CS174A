@@ -74,10 +74,10 @@ export class Basketball_Game extends Simulation
         this.mouse_enabled_canvases = new Set();
 
         this.shapes = {  square:    new defs.Square(),
-                         ball:   new defs.Subdivision_Sphere( 4 ),
-                         target: new defs.Subdivision_Sphere( 4 ),
+                         ball:      new defs.Subdivision_Sphere( 4 ),
+                         target:    new defs.Subdivision_Sphere( 4 ),
                          cube:      new defs.Cube(),
-                         //hoop:      new Shape_From_File("assets/basketball_hoop.obj"),
+                         hoop:      new defs.Torus(20,20),
                          text:      new Text_Line(10)
                        };
                                      
@@ -92,12 +92,12 @@ export class Basketball_Game extends Simulation
                         specularity: 0,
                         texture: new Texture( "assets/ball.png") }),
 
-            board:    new Material( phong, { color: color( 0.15, 0.15, 0.15, 1 ),
+            board:    new Material( phong, { color: color( 0.15,0.15,0.15,1 ),
                         ambient: 1,
                         diffusivity: 0,
                         specularity: 0  }),
 
-            text_img: new Material( t_phong, { color: color( 1, 1, 1, 1 ), 
+            text_img: new Material( t_phong, { color: color( 1,1,1,1 ), 
                         ambient: 1,
                         diffusivity: 0,
                         specularity: 0,
@@ -120,28 +120,34 @@ export class Basketball_Game extends Simulation
                         diffusivity: 0,
                         specularity: 0, 
                         texture: new Texture("assets/target.png") }),
-            ucla_w:   new Material( t_phong, {
+
+            backboard:new Material( t_phong, { //color: color( , 0, 0, 1 ),
                         ambient: 1,
                         diffusivity: 0,
                         specularity: 0,
-                        texture: new Texture("assets/ucla.png") })
+                        texture: new Texture("assets/backboard.jpg") }),
 
-//          hoop:     new Material( t_phong, {
-//                      ambient: 1,
-//                      diffusivity: 0,
-//                      specularity: 0,
-//                      texture: new Texture("assets/basketball_hoop_re.jpg") })
+            pole:     new Material( t_phong, {
+                        ambient: 1,
+                        diffusivity: 0,
+                        specularity: 0,
+                        texture: new Texture("assets/pole.jpg") }),
+
+            hoop:     new Material( t_phong, {
+                        ambient: 1,
+                        diffusivity: 0,
+                        specularity: 0, 
+                        texture: new Texture("assets/rim.jpg") }),                        
+
           };
+          console.log(this.shapes.ball.arrays.position);
 
         this.colliders = [
-        { intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .5 },
-        { intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(2), leeway: .3 },
+        { intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(1), leeway: .1 },
+        { intersect_test: Body.intersect_sphere, points: new defs.Subdivision_Sphere(2), leeway: .1 },
         { intersect_test: Body.intersect_cube,   points: new defs.Cube(),                leeway: .1 }
                        ];
         this.collider_selection = 0;
-        this.inactive_color = new Material( bump, { color: color( .5,.5,.5,1 ), ambient: .2 });
-        this.active_color = this.inactive_color.override( { color: color( 0,0.5,0,1 ), ambient: .5 } );
-        this.bright = new Material( phong, { color: color( 0,1,0,.5 ), ambient: 1 });
 
         /* ================================= ATTRIBUTES FOR BASKETBALL_SCENE ========================================= */
 
@@ -253,7 +259,7 @@ export class Basketball_Game extends Simulation
         while( this.targets.length < 1 ) {
             let rand_x = Math.floor(Math.random() * 41) - 20;
             let rand_y = Math.floor(Math.random() * 19) + 2;
-            console.log(rand_x, rand_y);
+            //console.log(rand_x, rand_y);
             let tt = Mat4.rotation( -1*Math.PI/2, 0,1,0 ).times(Mat4.translation( -35, rand_y, rand_x ));//rand_x, rand_y, -35 ));
             this.targets.push( new Body( this.shapes.target, this.materials.target, vec3( 0.15,1.5,1.4 ) ).emplace( tt, vec3(0,0,0), 0));
         }
@@ -266,30 +272,27 @@ export class Basketball_Game extends Simulation
         if (this.score > this.high_score)
           this.high_score = this.score;
 
-        // set congrats at the end of the game
-        if (this.game_time - this.time_elapsed_seconds <= 0) {
-          this.congrats = this.score.toString()
-          ;
-        }
-
         // move ball based on velocity, which gets decremented over time 
         for( let b of this.bodies ) {                                         
-          b.linear_velocity[1] += dt * -1.8;
+          b.linear_velocity[1] += dt * -0.8;
 
           // If about to fall through floor, reverse y velocity:
           if( b.center[1] < 1 && b.linear_velocity[1] < 0 ) {
-            b.linear_velocity[1] *= -0.8;   // Dampen y velocity and angular velocity
-            b.angular_velocity *= 0.8;
+            b.linear_velocity[0] *= 0.9;
+            b.linear_velocity[1] *= -0.8;   // Dampen y and z velocity
+            b.linear_velocity[2] *= 0.95;   
+
+            b.angular_velocity *= 0.95;
           }
 
-          if( b.center[2] < -34 && b.linear_velocity[2] < 0 ) {
+          if( b.center[2] < -34 && b.linear_velocity[2] < 0 ) { 
             b.linear_velocity[2] *= -0.8;   // Dampen z velocity and angular velocity 
-            b.angular_velocity *= -0.8;
+            b.angular_velocity *= -0.95;
           }
 
-          if( b.center[0] < -24 || b.center[0] > 24) {
+          if( b.center[0] < -24 || b.center[0] > 24 ) {
             b.linear_velocity[0] *= -0.8;   // Dampen x velocity and angular velocity
-            b.angular_velocity *= -0.8;
+            b.angular_velocity *= 0.8;
           }
         }
 
@@ -322,6 +325,7 @@ export class Basketball_Game extends Simulation
             }
           }
         }
+
         this.mouse_posY.shift();
         this.mouse_posY[9] = this.mouseY;
         this.mouse_posX.shift();
@@ -349,11 +353,10 @@ export class Basketball_Game extends Simulation
           //program_state.set_camera( Mat4.look_at( vec3( 0,9,17 ), vec3( 0,5,-20 ), vec3( 0,1,0 ) ));
         }
 
-
-        // Draw the basketball      // z = -23.5 is where the hoop's center is located
+        // DRAW THE BASKETBALL
         if ( this.mouseY >= 0 ) 
         {
-          this.ball_transform = Mat4.translation(0 + this.mouseX, 1 + this.mouseY, -5);
+          this.ball_transform = Mat4.translation(0 + this.mouseX, 1 + this.mouseY, -5 );
         }
         else    // Cannot drag the ball below the floor
         {
@@ -365,90 +368,48 @@ export class Basketball_Game extends Simulation
           this.shapes.ball.draw( context, program_state, this.ball_transform, this.materials.ball );
         }
 
-        // Draw the scoreboard
+        // DRAW THE SCOREBOARD
         let scoreboard_transform = Mat4.translation( 0,23,-35 )
                 .times(Mat4.scale( 24,1.5,.25 ));
         this.shapes.cube.draw( context, program_state, scoreboard_transform, this.materials.board);
 
-        // Draw "BONUS!" only for last x seconds, where x is bonus time
-        if (this.game_time - this.time_elapsed_seconds < this.bonus_time && this.game_time - this.time_elapsed_seconds > 0) {
-          let bonus_text_transform = Mat4.translation( -10,10,-34.99 )
-                  .times(Mat4.scale( 3,3,.25 ));
-          this.shapes.text.set_string( "Bonus!", context.context );
-          this.shapes.text.draw( context, program_state, bonus_text_transform, this.materials.text_img );
-        }
-
-        // Draw congrats text at the end
-        if (this.game_time - this.time_elapsed_seconds <= 0) {
-          let congrats_text_1_transform = Mat4.translation( -20,5,-34.99 )
-                  .times(Mat4.scale( 1,1,.25 ));
-          let congrats_text_1 = this.congrats + " congrats";
-          this.shapes.text.set_string( congrats_text_1, context.context );
-          this.shapes.text.draw( context, program_state, congrats_text_1_transform, this.materials.text_img );
-
-          let congrats_text_2_transform = Mat4.translation( -20,3,-34.99 )
-                  .times(Mat4.scale( 1,1,.25 ));
-          let congrats_text_2 = "to UCLA";
-          this.shapes.text.set_string( congrats_text_2, context.context );
-          this.shapes.text.draw( context, program_state, congrats_text_2_transform, this.materials.text_img );
-
-          let congrats_text_3_transform = Mat4.translation( -20,1,-34.99 )
-                  .times(Mat4.scale( 1,1,.25 ));
-          let congrats_text_3 = "graduates!";
-          this.shapes.text.set_string( congrats_text_3, context.context );
-          this.shapes.text.draw( context, program_state, congrats_text_3_transform, this.materials.text_img );
-
-          let wall_transform = Mat4.identity()
-                .times(Mat4.rotation( -Math.PI/2, 0,1,0 ))
-                .times(Mat4.rotation( Math.PI/2, 0,1,0 ))
-                .times(Mat4.translation( -2,11,-34.999 ))
-                .times(Mat4.scale( 28,12,0 ));
-          this.shapes.square.draw( context, program_state, wall_transform, this.materials.ucla_w);
-        }
-
-        // Draw "TIMER"
+        // DRAW THE TIMER
         let timer_title_transform = Mat4.translation( -23,22.6,-34.7 )
                 .times(Mat4.scale(0.65, 0.65, 0.65));
         this.shapes.text.set_string( "TIMER:", context.context );
         this.shapes.text.draw( context, program_state, timer_title_transform, this.materials.text_img );
-
-        // Draw "SCORE"
-        let score_title_transform = Mat4.translation( -5,22.6,-34.7 )
-                .times(Mat4.scale(0.65, 0.65, 0.65));
-        this.shapes.text.set_string( "SCORE:", context.context );
-        this.shapes.text.draw( context, program_state, score_title_transform, this.materials.text_img );
-
-        // Draw "HIGH SCORE"
-        let high_score_title_transform = Mat4.translation( 9,22.6,-34.7 )
-                .times(Mat4.scale(0.65, 0.65, 0.65));
-        this.shapes.text.set_string( "HIGHSCORE:", context.context );
-        this.shapes.text.draw( context, program_state, high_score_title_transform, this.materials.text_img );
-
-        // Draw timer text
         let timer_text_transform = Mat4.translation( -16.8,22.6,-34.7 )
                 .times(Mat4.scale(0.65, 0.65, 0.65));
         this.shapes.text.set_string( this.get_timer_text(this.time_elapsed), context.context );
         this.shapes.text.draw( context, program_state, timer_text_transform, this.materials.text_img );
 
-        // Draw score text
+        // DRAW THE SCORE
+        let score_title_transform = Mat4.translation( -5,22.6,-34.7 )
+                .times(Mat4.scale(0.65, 0.65, 0.65));
+        this.shapes.text.set_string( "SCORE:", context.context );
+        this.shapes.text.draw( context, program_state, score_title_transform, this.materials.text_img );
         let score_text_transform = Mat4.translation( 1,22.6,-34.7 )
                 .times(Mat4.scale(0.75, 0.75, 0.75));
         this.shapes.text.set_string( this.get_score_text(this.score), context.context );
         this.shapes.text.draw( context, program_state, score_text_transform, this.materials.text_img );
 
-        // Draw high score text
+        // DRAW "HIGH SCORE"
+        let high_score_title_transform = Mat4.translation( 9,22.6,-34.7 )
+                .times(Mat4.scale(0.65, 0.65, 0.65));
+        this.shapes.text.set_string( "HIGHSCORE:", context.context );
+        this.shapes.text.draw( context, program_state, high_score_title_transform, this.materials.text_img );
         let high_score_text_transform = Mat4.translation( 19,22.6,-34.7 )
                 .times(Mat4.scale(0.75, 0.75, 0.75));
         this.shapes.text.set_string( this.get_score_text(this.high_score), context.context );
         this.shapes.text.draw( context, program_state, high_score_text_transform, this.materials.text_img );
 
-        // Draw the ground 
+        // DRAW THE GROUND
         let ground_transform = Mat4.rotation( Math.PI/2, 0,1,0 )
                 .times(Mat4.rotation( Math.PI/2, 1,0,0 ))
                 .times(Mat4.scale( 35,25,1 ));
         this.shapes.square.draw( context, program_state, ground_transform, this.materials.ground);
 
-        // Draw the walls 
+        // DRAW THE WALLS
         let wall_transform = Mat4.rotation( Math.PI/2, 0,1,0 )
                 .times(Mat4.translation( 0,15,25 ))
                 .times(Mat4.scale( 35,15,0 ));
@@ -464,5 +425,20 @@ export class Basketball_Game extends Simulation
                 .times(Mat4.translation( 0,15,-35 ))
                 .times(Mat4.scale( 25,15,0 ));
         this.shapes.square.draw( context, program_state, wall_transform, this.materials.wall);  // Front wall
+
+        // DRAW THE BASKETBALL BACKBOARD
+        let bb_transform = Mat4.translation( 0, 8, -30 )
+                .times(Mat4.scale( 0.25, 8, 0.25 ));
+        this.shapes.cube.draw( context, program_state, bb_transform, this.materials.pole);
+        bb_transform = bb_transform.times(Mat4.scale( 25, 0.5, 0.25 ))
+                .times(Mat4.translation( 0, 2, 5 ));
+        this.shapes.cube.draw( context, program_state, bb_transform, this.materials.backboard);
+
+        // DRAW THE BASKETBALL HOOP
+        let hoop_transform = Mat4.rotation( -Math.PI/2, 1,0,0 )
+                .times(Mat4.translation( 0, 28.3, 13.3))
+                .times(Mat4.scale( 2,2,2 ))
+        this.shapes.hoop.draw( context, program_state, hoop_transform, this.materials.hoop);
+
       }
   }
