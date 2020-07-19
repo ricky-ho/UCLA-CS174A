@@ -9,3 +9,5 @@ hoop, so we modified the game to shooting at a target on the wall.
 
 - Link to the repository [here](https://github.com/ricky-ho/UCLA-CS174A/tree/master/team-project)
 - Link to the source code: [here](https://github.com/ricky-ho/UCLA-CS174A/blob/master/team-project/examples/basketball.js)
+
+![](team-project/assets/screenshot2.png)
