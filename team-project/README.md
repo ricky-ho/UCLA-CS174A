@@ -6,6 +6,8 @@ Brian Le, Logan Hernandez, Ricky Ho
 ## Our Project:
 Our project is a simple basketball shooting game in which a player has 2 minutes to score as many points as possible by hitting a target on the wall. 
 
+![](assets/screenshot.png)
+
 ## How to run:
 1. Clone or download our project into your local machine.
 2. If you are running on Windows, run the file called "host.bat". If you are running on Mac, run the file called "host.command". This should
